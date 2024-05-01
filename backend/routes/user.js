@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { z } = require("zod");
 const { User } = require("../db.js");
+const { Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const { authMiddleware } = require("../middleware");
@@ -12,6 +13,8 @@ const signupSchema = z.object({
   lastName: z.string(),
   password: z.string().min(6),
 });
+
+/*------------------------------- signup route --------------------------------*/
 
 router.post("/signup", async (req, res) => {
   // Validate input
@@ -39,6 +42,15 @@ router.post("/signup", async (req, res) => {
   });
   const userId = user._id;
 
+	/// ----- Create new account ------
+
+    await Account.create({
+        userId,
+        balance: 1 + Math.random() * 10000
+    })
+
+		/// -----  ------
+
   const token = jwt.sign(
     {
       userId,
@@ -51,6 +63,8 @@ router.post("/signup", async (req, res) => {
     token: token,
   });
 });
+
+/*------------------------------- signin route --------------------------------*/
 
 const signinBody = z.object({
   username: z.string().email(),
@@ -87,6 +101,8 @@ router.post("/signin", async (req, res) => {
     message: "Error while logging in",
   });
 });
+
+/*------------------------------- update route --------------------------------*/
 
 // Update user information route
 
@@ -131,6 +147,8 @@ router.put("/", authMiddleware, async (req, res) => {
     message: "Updated successfully",
   });
 });
+
+/*------------------------------- get route --------------------------------*/
 
 // Route to get users in bulk, filterable by firstName/lastName
 router.get("/bulk", async (req, res) => {
